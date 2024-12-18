@@ -31,13 +31,13 @@ RUN apt-get update && apt-get install -y \
     libu2f-udev && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 下载和安装指定版本的Chrome
-RUN wget -q https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.137/linux64/chrome-linux64.zip && \
+RUN wget -q https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.108/linux64/chrome-linux64.zip && \
     unzip chrome-linux64.zip -d /usr/local/ && \
     rm chrome-linux64.zip && \
     ln -s /usr/local/chrome-linux64/chrome /usr/local/bin/google-chrome
 
 # 下载和安装指定版本的ChromeDriver
-RUN wget -q https://storage.googleapis.com/chrome-for-testing-public/128.0.6613.137/linux64/chromedriver-linux64.zip && \
+RUN wget -q https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.108/linux64/chromedriver-linux64.zip && \
     unzip chromedriver-linux64.zip && \
     mv chromedriver-linux64/chromedriver /usr/local/bin/ && \
     rm -rf chromedriver-linux64 chromedriver-linux64.zip && \
@@ -56,8 +56,9 @@ RUN chromedriver --version
 # 设置环境变量
 ENV DISPLAY=:99
 ENV DASHSCOPE_API_KEY=<YOUR_DASHSCOPE_API_KEY>
-ENV QIANFAN_AK=<YOUR_QIANFAN_AK>
-ENV QIANFAN_SK=<YOUR_QIANFAN_SK>
+ENV OPENAI_API_VERSION=<YOUR_AZURE_OPENAI_API_VERSION>
+ENV AZURE_OPENAI_API_KEY=<YOUR_AZURE_OPENAI_API_KEY>
+ENV AZURE_OPENAI_ENDPOINT=<YOUR_AZURE_OPENAI_ENDPOINT>
 
 # 安装Python依赖
 RUN pip install --no-cache-dir -r requirements.txt
