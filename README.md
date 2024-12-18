@@ -6,13 +6,13 @@ This project was deployed in a docker container on an internal Linux server.
 
 ## Features ✨
 
-- 📰 Collects news articles about space and satellites from the past week
-- 🌍 Categorizes news by country/region
-- 🏆 Utilizes a Pitcher Agent to select the top news for each region
-- 📝 Uses a Scripter Agent to summarize the selected news in under 150 words
-- ⚙️ Compiles the Pitcher Agent & Scripter Agent by LangGraph
-- 🌐 Develops a Streamlit web interface
-- 📄 Generates a downloadable user-friendly docx document with summarized news
+- 📰 Collects news articles about space and satellites from the past month.
+- 🌍 Categorizes news by country/region.
+- 🏆 Utilizes a Pitcher Agent to select the top news for each region.
+- 📝 Uses a Scripter Agent to summarize the selected news in under 150 words.
+- ⚙️ Compiles the Pitcher Agent & Scripter Agent by LangGraph.
+- 🌐 Develops a Streamlit web interface.
+- 📄 Generates a downloadable user-friendly docx document with summarized news.
 
 ![Project Banner](./NewsAgents.jpg)
 
