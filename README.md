@@ -40,7 +40,7 @@ To install and set up the project, follow these steps:
 5. Make sure you have Google Chrome browser and the corresponding version of ChromeDriver.
 6. Ensure you have an LLM API that can be invoked by LangChain.
 
-## Usage 🚀
+### Usage 🚀
 
 To start using the News Agent, run the following command:
 
