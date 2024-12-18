@@ -7,9 +7,10 @@ from scraper_tools import run_news_scraper
 from docx import Document
 from io import BytesIO
 from event_scraper import *
-from openai import OpenAI
+from openai import AzureOpenAI
 import json
 import re
+import os
 
 class NewsState(TypedDict):
     region: str
@@ -94,22 +95,34 @@ if btn:
                         tag_list = ['AI', 'Civil', 'Commercial', 'Finance', 'Launch', 'Opinion', 'Manufacturing', 'Imagery and Sensing']
                         example = {'tag': 'AI'}
 
-                        base_urls = ["https://api.chatanywhere.tech/v1", "https://api.chatanywhere.com.cn/v1"]
-                        client = OpenAI(
-                            api_key="YOUR_OPEN_AI_API_KEY", 
-                            base_url=base_urls[0],
+                        api_key = "322066cba4f44a708a07e1be88205eaa"
+                        azure_endpoint = "https://openai-starvision.openai.azure.com/"
+                        api_version = "2024-05-01-preview"
+
+                        # 检查是否正确读取了环境变量
+                        if not api_key or not azure_endpoint:
+                            raise ValueError("Azure OpenAI API Key or Endpoint is not set in the environment variables.")
+
+                        client = AzureOpenAI(
+                            azure_endpoint=azure_endpoint,
+                            api_key=api_key, 
+                            api_version=api_version
                         )
-                        completion = client.chat.completions.create(
-                            model = "gpt-3.5-turbo",
-                                messages = [
-                                    {"role": "system", "content": f"You are a news editor expert in select the most relevant tag for news articles.\
-                                    Choose only one tag from the following list: {tag_list}. \
-                                    Return the selected tag as a JSON object with the key 'tag'. For example, {example}. Do not reply other information" },
-                                    {"role": "user", "content": f"The news title is: '{selected_news['title']}'. News content is: '{selected_news['content'][:2000]}'."}
-                                ],
-                                temperature = 0.6,
-                            )
-                        tag_response = completion.choices[0].message.content
+                        # 调用 Azure OpenAI 的 ChatCompletion 模型
+                        messages = [
+                            {"role": "system", "content": f"You are a news editor expert in select the most relevant tag for news articles.\
+                            Choose only one tag from the following list: {tag_list}. \
+                            Return the selected tag as a JSON object with the key 'tag'. For example, {example}. Do not reply other information" },
+                            {"role": "user", "content": f"The news title is: '{selected_news['title']}'. News content is: '{selected_news['content'][:8000]}'."}
+                        ]
+
+                        response = client.chat.completions.create(
+                            model="gpt-4o",  # 指定模型名称
+                            messages=messages,
+                            temperature=0.7,
+                            #stream=True
+                        )
+                        tag_response = response.choices[0].message.content
                         print("tag response:", tag_response)
 
                         # 解析大模型的输出

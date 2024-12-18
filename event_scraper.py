@@ -1,8 +1,14 @@
 import requests
 from lxml import html
-from langchain_community.llms import Tongyi
+from langchain_openai import AzureChatOpenAI
 
-llm = Tongyi(max_retries = 30)
+llm = AzureChatOpenAI(
+    azure_deployment="gpt-4o",  # or your deployment
+    temperature=0.7,
+    max_tokens=8192,
+    timeout=None,
+    max_retries=10,
+)
 
 def script(article: dict):
         content = article['content']
@@ -25,7 +31,7 @@ def script(article: dict):
                        f"Please return the summarized event in plain text, do not return other content"
         }]
 
-        response = llm.invoke(prompt)
+        response = llm.invoke(prompt).content
 
         # 解析大模型的输出
         summarized_content = response.strip().replace('\n', ' ') if response else "Failed to summarize the content."

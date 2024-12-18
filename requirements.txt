@@ -3,12 +3,12 @@ feedparser
 langgraph
 langchain
 langchain_community
+langchain_openai
 lxml
+openai
 python-docx
 requests
 requests_html
 selenium
 streamlit==1.37.0
 webdriver_manager
-openai
-qianfan

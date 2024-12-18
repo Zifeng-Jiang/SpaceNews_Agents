@@ -1,7 +1,10 @@
-from openai import OpenAI
+from langchain_community.llms import Tongyi
 import json
 import re
 from region_filter import *
+import os
+
+llm = Tongyi(max_retries = 30)
 
 class PitcherAgent:
     def pitch(self, news_list: list):
@@ -23,18 +26,8 @@ class PitcherAgent:
                         f"{sample_json}\n"
             }]
 
-            client = OpenAI(
-                api_key="YOUR_OPEN_AI_API_KEY", 
-                base_url="https://free.gpt.ge/v1/"
-            )
-        
-            completion = client.chat.completions.create(
-                model = "gpt-3.5-turbo-16k",
-                messages = prompt,
-                temperature = 0.6,
-            )
-            response = completion.choices[0].message.content
-
+            response = llm.invoke(prompt)
+            
             # 解析大模型的输出
             pattern = r'\{[^{}]*\}'
             match = re.search(pattern, response)
@@ -58,10 +51,8 @@ class PitcherAgent:
         else:
             news_list = filter_news_by_region(news_list, region)
             # print("The news to be pitched in", region)
-
             # for news in news_list:
             #     print(news)
-
             selected_news = self.pitch(news_list)
             #print(selected_news)
         # find the selected_news

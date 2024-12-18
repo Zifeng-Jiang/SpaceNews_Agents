@@ -3,10 +3,10 @@ from lxml import html
 from datetime import datetime, timedelta
 
 def get_spaceinafrica():
-    # 获取当前日期
+    # 获取当前日期并设置为本月的第一天
     today = datetime.now()
-    one_week_ago = today - timedelta(days=7)
-
+    first_day_of_month = today.replace(day=1)
+    
     # 初始化一个空列表用于存储新闻数据
     news_list = []
 
@@ -31,11 +31,15 @@ def get_spaceinafrica():
                 # print('Missing necessary information. Skipping...')
                 continue
 
-            date = datetime.strptime(date_str, '%B %d, %Y') if date_str else None
+            try:
+                # 将字符串日期转换为日期对象
+                date = datetime.strptime(date_str, '%B %d, %Y') if date_str else None
+            except ValueError:
+                continue
 
-            # 判断新闻是否在一周内
-            if date and date < one_week_ago:
-                # print('Date is older than one week. Stopping...')
+            # 判断新闻是否在本月内
+            if date and date < first_day_of_month:
+                # 如果新闻的日期小于本月第一天，则跳过
                 return False
 
             link = article.xpath('.//h3[@class="t-entry-title h5 title-scale"]/a/@href')

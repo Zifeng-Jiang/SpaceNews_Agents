@@ -8,7 +8,7 @@ from space_africa_scraper import *
 def run_news_scraper():
     result = get_spacenews()
 
-    # 特殊照顾一下中东地区，再爬取https://mideastspace.substack.com/加入原先的SpaceNews        
+    # 特殊照顾一下中东地区，爬取https://mideastspace.substack.com/加入原先的SpaceNews        
     roundup = get_roundup(find_url())
     result = result + roundup
 

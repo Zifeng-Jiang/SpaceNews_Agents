@@ -1,8 +1,5 @@
-from langchain_community.llms import Tongyi
-from datetime import datetime
+from openai import AzureOpenAI
 import os
-
-llm = Tongyi(max_retries = 30)
 
 class ScripterAgent:
     def script(self, article: dict):
@@ -17,19 +14,37 @@ class ScripterAgent:
             "content": "You are an expert news editor."
         }, {
             "role": "user",
-            "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n\n"
-                       f"Here are the details of the best news article:\n\n"
+            "content": f"Here are the details of the best news article:\n\n"
                        f"Title: {article['title']}\n"
                        f"Abstract: {article['abstract']}\n"
-                       f"Content: {article['content'][:4000]}\n\n"
+                       f"Content: {article['content'][:8000]}\n\n"
                        f"Your task is to summarize the article into less than 150 words, highlighting the main points and ensuring it's well-written and coherent. "
                        f"Please return the summarized article in plain text, do not return other content"
         }]
 
-        response = llm.invoke(prompt)
+        api_key = "322066cba4f44a708a07e1be88205eaa"
+        azure_endpoint = "https://openai-starvision.openai.azure.com/"
+        api_version = "2024-05-01-preview"
+        # 检查是否正确读取了环境变量
+        if not api_key or not azure_endpoint:
+            raise ValueError("Azure OpenAI API Key or Endpoint is not set in the environment variables.")
+
+        client = AzureOpenAI(
+            azure_endpoint=azure_endpoint,
+            api_key=api_key, 
+            api_version=api_version
+        )
+
+        response = client.chat.completions.create(
+            model="gpt-4o",  # 指定模型名称
+            messages=prompt,
+            temperature=0.7,
+        )
+
+        response_content = response.choices[0].message.content
 
         # 解析大模型的输出
-        summarized_content = response.strip().replace('\n', ' ') if response else "Failed to summarize the content."
+        summarized_content = response_content.strip().replace('\n', ' ') if response_content else "Failed to summarize the content."
 
         return summarized_content
 

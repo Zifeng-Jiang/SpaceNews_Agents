@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 def get_satellitetoday_news():
     # 获取当前日期
     today = datetime.now()
-    one_week_ago = today - timedelta(days=7)
+    # 获取当前月份的第一天
+    first_day_of_month = today.replace(day=1)
     
     # 构建初始 URL，注意这里包含了页码的占位符
-    date_range = f"{one_week_ago.strftime('%Y-%m-%d')}--{today.strftime('%Y-%m-%d')}"
+    date_range = f"{first_day_of_month.strftime('%Y-%m-%d')}--{today.strftime('%Y-%m-%d')}"
     base_url = "https://www.satellitetoday.com/page/{page}/?s&order=desc&orderby=post_date&date_range={date_range}"
     
     news_list = []
@@ -60,12 +61,11 @@ def get_satellitetoday_news():
             except ValueError:
                 continue
             
-            # 判断新闻是否在一周内
-            if date < one_week_ago:
-                return False
+            # 判断新闻是否在本月内
+            if not (first_day_of_month <= date <= today):
+                continue
 
             news_content = scrape_content(link) if link != 'No Link' else 'No Content'
-            # news_content = ''  # 反爬机制爬不到content，但是有abstract和link
             
             # 将新闻信息存储在字典中
             news = {
@@ -92,6 +92,7 @@ def get_satellitetoday_news():
         
         page_num += 1
 
+    # 过滤新闻，排除不相关的内容
     filtered_list = []
     for news in news_list:
         if 'AI' in news['title'] or 'AI' in news['abstract']:
