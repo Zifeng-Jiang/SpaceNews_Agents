@@ -26,7 +26,7 @@ To install and set up the project, follow these steps:
     ```
 2. Navigate to the project directory:
     ```bash
-    cd News_agent
+    cd SpaceNews Agents
     ```
 3. Create and activate a virtue environment(Conda):
     ```bash
@@ -49,13 +49,14 @@ streamlit run main.py
 ```
 
 ## Installation(Docker) 🐳 *Recomanded*
+
+Step 1 and step 2 in Conda installation. (Clone the repo)
+
 Use the docker file in repo to build a docker image and run the project in a docker container.
 ```bash
 docker build -t news_agent .
 docker run -d --name news_agent_container -p 8502:8502 news_agent:latest
 ```
-
-You can change the port number from 8502 to any port number whichever you think is good.
 
 ## Contributing 🤝
 Contributions are welcome! Please follow these steps to contribute:
