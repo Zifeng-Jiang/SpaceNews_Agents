@@ -2,9 +2,7 @@
 
 A Python-based project designed to collect and pitch and summarize recent news about space and satellites. The project categorizes news by country/region and selects the top news for each region, providing a concise summary for easy reading.
 
-This project was deployed in a docker container on AI-1 server.
-
-Try the [SpaceNews Agents streamlit app](http://192.168.148.59:8502/)
+This project was deployed in a docker container on an internal Linux server.
 
 ## Features ✨
 
