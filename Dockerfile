@@ -1,3 +1,4 @@
+# v0.2.2
 # 使用官方的Python基础镜像
 FROM python:3.11-bullseye
 
