@@ -95,8 +95,8 @@ if btn:
                         tag_list = ['AI', 'Civil', 'Commercial', 'Finance', 'Launch', 'Opinion', 'Manufacturing', 'Imagery and Sensing']
                         example = {'tag': 'AI'}
 
-                        api_key = "322066cba4f44a708a07e1be88205eaa"
-                        azure_endpoint = "https://openai-starvision.openai.azure.com/"
+                        api_key = <YOUR_AzureAI_API_KEY>
+                        azure_endpoint = <YOUR_AzureAI_ENDPOINT>
                         api_version = "2024-05-01-preview"
 
                         # 检查是否正确读取了环境变量
