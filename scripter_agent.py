@@ -1,3 +1,4 @@
+# v0.2.3
 from openai import AzureOpenAI
 import os
 

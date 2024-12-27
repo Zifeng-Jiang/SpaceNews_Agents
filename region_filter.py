@@ -1,4 +1,4 @@
-# v0.2.2
+# v0.2.3
 def is_relevant_article(region, text):
     text = text.lower()
     region = region.lower()

@@ -85,7 +85,7 @@ def get_satellitetoday_news():
     
     while True:
         current_url = base_url.format(page=page_num, date_range=date_range)
-        print(f'Scraping page: {current_url}...')
+        print(f'Scraping Satellitetoday page: {current_url}...')
         continue_scraping = scrape_page(current_url)
         if not continue_scraping:
             break

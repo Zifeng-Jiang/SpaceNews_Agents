@@ -1,3 +1,4 @@
+# v0.2.3
 from spacenews_scraper import *
 from find_news_mideast import *
 from satellitetoday_scraper import *

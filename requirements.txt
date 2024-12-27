@@ -10,5 +10,5 @@ python-docx
 requests
 requests_html
 selenium
-streamlit==1.37.0
+streamlit==1.38.0
 webdriver_manager

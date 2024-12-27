@@ -1,4 +1,4 @@
-# SpaceNews Agents 🌌🛰️
+# SpaceNews Agents 🌌🛰️ v0.2.3
 
 A Python-based project designed to collect and pitch and summarize recent news about space and satellites. The project categorizes news by country/region and selects the top news for each region, providing a concise summary for easy reading.
 

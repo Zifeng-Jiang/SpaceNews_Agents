@@ -1,3 +1,4 @@
+# v0.2.3
 import requests
 from lxml import html
 from langchain_openai import AzureChatOpenAI

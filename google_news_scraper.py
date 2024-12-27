@@ -1,3 +1,4 @@
+# v0.2.3
 import feedparser
 from datetime import datetime, timedelta
 from langchain_community.llms import Tongyi
@@ -39,7 +40,7 @@ def get_google_news():
                     请将下面这段中文新闻标题翻译为英文，仅返回翻译的英文结果，不要返回其他的内容。 \
                     新闻标题如下：{entry.title}.")
 
-        print(res)
+        #print(res)
         en_title = res
 
         news = {

@@ -1,3 +1,4 @@
+# v0.2.3
 import streamlit as st
 from pitcher_agent import PitcherAgent
 from scripter_agent import ScripterAgent
