@@ -2,19 +2,17 @@
 
 A Python-based project designed to collect and pitch and summarize recent news about space and satellites. The project categorizes news by country/region and selects the top news for each region, providing a concise summary for easy reading.
 
-This project was deployed in a docker container on AI-1 server.
-
-Try the [SpaceNews Agents streamlit app](http://192.168.148.59:8502/)
+This project was deployed in a docker container on an internal Linux server.
 
 ## Features ✨
 
-- 📰 Collects news articles about space and satellites from the past week
-- 🌍 Categorizes news by country/region
-- 🏆 Utilizes a Pitcher Agent to select the top news for each region
-- 📝 Uses a Scripter Agent to summarize the selected news in under 150 words
-- ⚙️ Compiles the Pitcher Agent & Scripter Agent by LangGraph
-- 🌐 Develops a Streamlit web interface
-- 📄 Generates a downloadable user-friendly docx document with summarized news
+- 📰 Collects news articles about space and satellites from the past month.
+- 🌍 Categorizes news by country/region.
+- 🏆 Utilizes a Pitcher Agent to select the top news for each region.
+- 📝 Uses a Scripter Agent to summarize the selected news in under 150 words.
+- ⚙️ Compiles the Pitcher Agent & Scripter Agent by LangGraph.
+- 🌐 Develops a Streamlit web interface.
+- 📄 Generates a downloadable user-friendly docx document with summarized news.
 
 ![Project Banner](./NewsAgents.jpg)
 
@@ -28,7 +26,7 @@ To install and set up the project, follow these steps:
     ```
 2. Navigate to the project directory:
     ```bash
-    cd News_agent
+    cd SpaceNews Agents
     ```
 3. Create and activate a virtue environment(Conda):
     ```bash
@@ -42,7 +40,7 @@ To install and set up the project, follow these steps:
 5. Make sure you have Google Chrome browser and the corresponding version of ChromeDriver.
 6. Ensure you have an LLM API that can be invoked by LangChain.
 
-## Usage 🚀
+### Usage 🚀
 
 To start using the News Agent, run the following command:
 
@@ -51,13 +49,14 @@ streamlit run main.py
 ```
 
 ## Installation(Docker) 🐳 *Recomanded*
+
+Step 1 and step 2 in Conda installation. (Clone the repo)
+
 Use the docker file in repo to build a docker image and run the project in a docker container.
 ```bash
 docker build -t news_agent .
 docker run -d --name news_agent_container -p 8502:8502 news_agent:latest
 ```
-
-You can change the port number from 8502 to any port number whichever you think is good.
 
 ## Contributing 🤝
 Contributions are welcome! Please follow these steps to contribute:
