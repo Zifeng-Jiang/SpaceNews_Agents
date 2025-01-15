@@ -16,7 +16,7 @@ This project was deployed in a docker container on an internal Linux server.
 
 ![Project Banner](./NewsAgents.jpg)
 
-## Installation(Docker) 🐳 *Recomanded*
+## Installation (Docker) 🐳 *Recomanded*
 
 Step 1 and step 2 in Conda installation. (Clone the repo)
 
