@@ -16,6 +16,16 @@ This project was deployed in a docker container on an internal Linux server.
 
 ![Project Banner](./NewsAgents.jpg)
 
+## Installation(Docker) 🐳 *Recomanded*
+
+Step 1 and step 2 in Conda installation. (Clone the repo)
+
+Use the docker file in repo to build a docker image and run the project in a docker container.
+```bash
+docker build -t news_agent .
+docker run -d --name news_agent_container -p 8502:8502 news_agent:latest
+```
+
 ## Installation (Conda) 🛠️
 
 To install and set up the project, follow these steps:
@@ -48,15 +58,6 @@ To start using the News Agent, run the following command:
 streamlit run main.py
 ```
 
-## Installation(Docker) 🐳 *Recomanded*
-
-Step 1 and step 2 in Conda installation. (Clone the repo)
-
-Use the docker file in repo to build a docker image and run the project in a docker container.
-```bash
-docker build -t news_agent .
-docker run -d --name news_agent_container -p 8502:8502 news_agent:latest
-```
 
 ## Contributing 🤝
 Contributions are welcome! Please follow these steps to contribute:
