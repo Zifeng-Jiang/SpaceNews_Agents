@@ -5,10 +5,13 @@ langchain
 langchain_community
 langchain_openai
 lxml
+mysql-connector-python
 openai
 python-docx
+python-dotenv
 requests
 requests_html
 selenium
-streamlit==1.38.0
+streamlit
 webdriver_manager
+trafilatura

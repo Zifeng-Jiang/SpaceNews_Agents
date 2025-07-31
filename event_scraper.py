@@ -2,6 +2,8 @@
 import requests
 from lxml import html
 from langchain_openai import AzureChatOpenAI
+from content_generator import generate_event_content
+import time  # Import time module for sleep
 
 llm = AzureChatOpenAI(
     azure_deployment="gpt-4o",  # or your deployment
@@ -76,12 +78,40 @@ def get_events():
 
         # Define function to scrape event content from its detail page
         def scrape_event_content(url):
-            response = requests.get(url)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            for i in range(5):  # Retry up to 5 times
+                response = requests.get(url, headers=headers)
+                if response.status_code == 200:
+                    break
+                elif response.status_code == 429:
+                    print(f"DEBUG: Received 429 Too Many Requests. Retrying in {2 ** i} seconds...")
+                    time.sleep(2 ** i)  # Exponential backoff
+                else:
+                    print(f"DEBUG: Received unexpected status code {response.status_code}. Aborting.")
+                    return ''
+
             tree = html.fromstring(response.content)
-            # Use a more generalized XPath to select paragraphs and list items within divs with dynamic IDs
-            content_elements = tree.xpath('//*[starts-with(@id, "post-")]/p | //*[starts-with(@id, "post-")]/ul')
-            content = '\n'.join([el.text_content().strip() for el in content_elements if el.text_content().strip()])
+            content_elements = tree.xpath('//*[starts-with(@id, "post-")]/p/text() | //*[starts-with(@id, "post-")]/ul/text()')
+            content = '\n'.join([el.strip() for el in content_elements if el.strip()])
             content = ' '.join(content.replace('\n\n', '\n').replace('\t', ' ').replace('\xa0', ' ').replace('\r', ' ').split())
+
+            # If scraped content is empty, generate content using LLM
+            if not content:
+                print(f"DEBUG: Scraped content is empty for URL: {url}. Generating content with LLM.")
+                # Pass event parameters to the content generator
+                event_params = {
+                    'title': title,
+                    'date': date,
+                    'address': address,
+                    'link': url
+                }
+                #content = generate_event_content(event_params)
+                print(f"DEBUG: Generated content using LLM. Content length: {len(content)}")
+            else:
+                print(f"DEBUG: Scraped content length for URL {url}: {len(content)}")
+
             return content
 
         # Scrape event content if the link is available

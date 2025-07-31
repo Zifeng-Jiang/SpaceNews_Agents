@@ -1,4 +1,3 @@
-# v0.2.3
 import feedparser
 from datetime import datetime, timedelta
 from langchain_community.llms import Tongyi
@@ -29,28 +28,31 @@ def get_google_news():
             'content': entry.title
         }
         news_list_en.append(news)
+        print(f"Successfully scraped GoogleNews article: {entry.title}")
 
     for entry in feed_zh.entries:
         # 解析发布时间并加8小时(北京时间)
         published_gmt = datetime.strptime(entry.published, '%a, %d %b %Y %H:%M:%S %Z')
         published_gmt_plus_8 = published_gmt + timedelta(hours=8)
-
+        '''
         # llm = QianfanLLMEndpoint(model="ERNIE-Speed-128K")
         res = llm.invoke(f"你是新闻编辑，你非常擅长将中文新闻翻译为英文。\
                     请将下面这段中文新闻标题翻译为英文，仅返回翻译的英文结果，不要返回其他的内容。 \
                     新闻标题如下：{entry.title}.")
-
+        '''
         #print(res)
-        en_title = res
+        #en_title = res
 
         news = {
-            'title': en_title,
-            'abstract': en_title,
+            'title': entry.title,
+            'abstract': entry.title,
             'link': entry.link,
             'date': published_gmt_plus_8.strftime('%Y-%m-%d %H:%M:%S %Z'),
-            'content': en_title
+            'content': entry.title
         }
         news_list_zh.append(news)
+        print(f"Successfully scraped GoogleNews article: {entry.title}")
 
     combined_list = news_list_en + news_list_zh
     return combined_list
+

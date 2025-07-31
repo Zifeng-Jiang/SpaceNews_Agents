@@ -1,4 +1,3 @@
-# v0.2.3
 from langchain_community.llms import Tongyi
 import json
 import re
@@ -18,12 +17,12 @@ class PitcherAgent:
             """
             prompt = [{
                 "role": "system",
-                "content": "You are an expert in satellite&AI technologies field tasked with selecting the best commercial satellite news article from the list below and providing its title in JSON format. Do not select news article related to military or politics"
+                "content": "You are an expert in satellite&AI technologies field tasked with selecting the best commercial satellite news article from the list below and providing its title in JSON format."
             }, {
                 "role": "user",
                 "content": f"Here are the news articles' title and part of the content:\n\n" + 
                         "\n\n".join([f"Title: {article['title']}\n Content: {article['content'][:1000]}\n" for article in news_list]) +
-                        f"\n\nYour task is to select the most relevant and noteworthy and positive article from the news above and return its title in the following JSON format:\n"
+                        f"\n\nYour task is to select the most relevant and noteworthy and positive article from the news above and return its title(do not modify) in the following JSON format:\n"
                         f"{sample_json}\n"
             }]
 

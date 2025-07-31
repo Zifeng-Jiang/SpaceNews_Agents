@@ -4,8 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from lxml import html
-import requests
 from datetime import datetime
 import logging
 
@@ -15,6 +15,7 @@ def setup_driver():
     """
     try:
         options = Options()
+        options.add_argument("--headless")  # Run in headless mode
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-extensions")
@@ -22,27 +23,29 @@ def setup_driver():
         options.add_argument("--ignore-certificate-errors")  # Disable SSL verification
         options.add_argument("--ignore-ssl-errors")
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-        
-        driver = webdriver.Chrome(service=ChromeService(), options=options)
+
+        # Use webdriver-manager to automatically manage ChromeDriver
+        service = ChromeService(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
         driver.set_window_size(1400, 1000)
         return driver
     except Exception as e:
         logging.error(f"Failed to initialize WebDriver: {e}")
         raise
 
-def get_news_content(url):
+def get_news_content(driver, url):
     """
     爬取新闻详情页的内容和标签
     """
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
-            'Accept-Language': 'en-US,en;q=0.5',
-        }
-        response = requests.get(url, headers=headers, timeout=10)
-        response.encoding = 'utf-8'
-        tree = html.fromstring(response.content)
+        driver.get(url)
+        # Wait for the entry-content div to be present before proceeding
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'div.entry-content'))
+        )
+        
+        page_source = driver.page_source
+        tree = html.fromstring(page_source)
         
         # 获取文章内容
         content_paragraphs = tree.cssselect('div.entry-content p')
@@ -83,8 +86,11 @@ def get_spacenews(base_url="https://spacenews.com/section/news-archive/"):
         
         news_list = []
         processed_links = set()  # 用于记录已处理的文章链接
+        page_num = 1  # 页面计数器
         
-        driver.get(base_url)
+        # 构造当前页面URL
+        current_url = base_url
+        driver.get(current_url)
         
         while True:
             # 等待文章元素加载
@@ -96,18 +102,17 @@ def get_spacenews(base_url="https://spacenews.com/section/news-archive/"):
             # 用于检查本次循环是否有新文章被处理
             new_articles_found = False
             
+            # Extract all article data upfront to avoid stale element issues
+            article_data_list = []
             for article in articles:
                 try:
-                    # 首先获取文章链接，用于去重
+                    # 获取文章链接
                     link_element = article.find_element(By.CSS_SELECTOR, 'h2.entry-title a')
                     link = link_element.get_attribute('href')
                     
                     # 如果这个链接已经处理过，跳过
                     if link in processed_links:
                         continue
-                        
-                    processed_links.add(link)
-                    new_articles_found = True
                     
                     # 获取标题
                     title = link_element.text.strip()
@@ -119,7 +124,7 @@ def get_spacenews(base_url="https://spacenews.com/section/news-archive/"):
                     
                     # 检查日期是否在当月
                     if article_date < first_day_of_month:
-                        return filter_news(news_list)
+                        break
                     
                     # 获取摘要
                     try:
@@ -127,23 +132,39 @@ def get_spacenews(base_url="https://spacenews.com/section/news-archive/"):
                     except:
                         abstract = ""
                     
-                    # 获取详细内容和标签
-                    content, tag = get_news_content(link)
-                    
-                    news = {
-                        'title': title,
-                        'abstract': abstract,
-                        'date': date_str,
+                    article_data = {
                         'link': link,
+                        'title': title,
+                        'date_str': date_str,
+                        'abstract': abstract
+                    }
+                    article_data_list.append(article_data)
+                    processed_links.add(link)
+                    new_articles_found = True
+                    print(f"Added SpaceNews article: {link}")
+                    
+                except Exception as e:
+                    logging.error(f"Error extracting article data: {str(e)}")
+                    continue
+            
+            # Now process each article's detailed content
+            for article_data in article_data_list:
+                try:
+                    # 获取详细内容和标签
+                    content, tag = get_news_content(driver, article_data['link'])
+                    print(f"Successfully scraped spacenews article: {article_data['title']}\n{content[:150]}...")
+                    news = {
+                        'title': article_data['title'],
+                        'abstract': article_data['abstract'],
+                        'date': article_data['date_str'],
+                        'link': article_data['link'],
                         'content': content,
                         'tag': tag
                     }
                     news_list.append(news)
-                    print(f"Successfully scraped spacenews article: {title}")
-                    
 
                 except Exception as e:
-                    logging.error(f"Error processing article: {str(e)}")
+                    logging.error(f"Error processing article content: {str(e)}")
                     continue
             
             # 如果本次循环没有发现新文章，说明已经到底或者出现问题
@@ -151,27 +172,25 @@ def get_spacenews(base_url="https://spacenews.com/section/news-archive/"):
                 print("No new articles found in this batch")
                 break
                 
-            # 尝试加载更多
+            # 使用url翻页
+            page_num += 1
+            if page_num == 2:
+                # 第二页开始使用page/n/格式
+                current_url = f"{base_url.rstrip('/')}/page/{page_num}/"
+            else:
+                # 后续页面
+                current_url = f"https://spacenews.com/section/news-archive/page/{page_num}/"
+            
+            print(f"Moving to page {page_num}: {current_url}")
+            
             try:
-                # 滚动到页面底部
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                
-                load_more = wait.until(EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, '#infinite-handle span button, .load-more a')
-                ))  # 等待加载更多按钮可点击
-                
-                driver.execute_script("arguments[0].scrollIntoView(true);", load_more)
-                driver.execute_script("arguments[0].click();", load_more)
-
-                # 等待新文章加载完成，通过比较加载的文章数量来确保内容加载完成
-                current_articles = len(driver.find_elements(By.CSS_SELECTOR, 'article.post'))
-                
-                # 等待新文章数量增加，最多等 3 秒
-                wait.until(lambda driver: len(driver.find_elements(By.CSS_SELECTOR, 'article.post')) > current_articles)
-                
+                driver.get(current_url)
+                # 等待页面加载
+                wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'article.post')))
             except Exception as e:
-                print("No more content to load or loading failed")
+                logging.error(f"Error loading page {page_num}: {str(e)}")
                 break
+            
 
     except Exception as e:
         logging.error(f"Error in main crawling process: {str(e)}")

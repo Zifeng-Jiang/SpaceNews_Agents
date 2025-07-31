@@ -1,10 +1,10 @@
-# v0.2.3
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from lxml import html
 import requests
 from datetime import datetime
@@ -16,6 +16,7 @@ def setup_driver():
     """
     try:
         options = Options()
+        options.add_argument("--headless")  # Run in headless mode
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-extensions")
@@ -23,8 +24,10 @@ def setup_driver():
         options.add_argument("--ignore-certificate-errors")  # Disable SSL verification
         options.add_argument("--ignore-ssl-errors")
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-        
-        driver = webdriver.Chrome(service=ChromeService(), options=options)
+
+        # Use webdriver-manager to automatically manage ChromeDriver
+        service = ChromeService(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
         driver.set_window_size(1400, 1000)
         return driver
     except Exception as e:

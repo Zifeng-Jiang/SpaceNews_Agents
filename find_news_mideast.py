@@ -1,15 +1,16 @@
-# v0.2.3
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from lxml import html
 import requests
 
 def find_url():
     options = Options()
+    options.add_argument("--headless")  # Run in headless mode
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-extensions")
@@ -17,7 +18,12 @@ def find_url():
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--ignore-certificate-errors")  # Disable SSL verification
     options.add_argument("--ignore-ssl-errors")
-    driver = webdriver.Chrome(service=ChromeService(), options=options)
+    options.add_argument("--ignore-certificate-errors-spki-list")
+    options.add_argument("--disable-features=VizDisplayCompositor")
+    
+    # Use webdriver-manager to automatically manage ChromeDriver
+    service = ChromeService(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
     driver.set_window_size(1400, 1000)
 
     url = 'https://mideastspace.substack.com/'

@@ -1,7 +1,7 @@
-# v0.2.3
 import streamlit as st
 from pitcher_agent import PitcherAgent
 from scripter_agent import ScripterAgent
+from dingTalk_bot import *
 from langgraph.graph import StateGraph
 from typing import List, TypedDict
 from scraper_tools import run_news_scraper
@@ -9,6 +9,7 @@ from docx import Document
 from io import BytesIO
 from event_scraper import *
 from openai import AzureOpenAI
+from db_manager import NewsDatabase
 import json
 import re
 import os
@@ -37,24 +38,87 @@ st.title('📰SpaceNews Agents🤖')
 
 """Hello 👋🏻 You can get space/satellite news from all over the world through SpaceNews Agents."""
 st.write("China | Middle East | Africa | Central Asia | Southeast Asia | Latin America | AI | Launch | Commercial | Events")
+
+# Check database connection
+with st.sidebar:
+    st.subheader("Database Status")
+    try:
+        db = NewsDatabase()
+        if db.connect():
+            st.success("✅ Connected to MySQL database")
+            # Show database stats
+            try:
+                db.cursor.execute("SELECT COUNT(*) as count FROM articles")
+                article_count = db.cursor.fetchone()['count']
+                db.cursor.execute("SELECT COUNT(*) as count FROM events")
+                event_count = db.cursor.fetchone()['count']
+                st.write(f"Articles in database: {article_count}")
+                st.write(f"Events in database: {event_count}")
+            except Exception as e:
+                st.warning(f"Could not retrieve stats: {str(e)}")
+            db.close()
+        else:
+            st.error("❌ Failed to connect to MySQL database")
+    except Exception as e:
+        st.error(f"❌ Database error: {str(e)}")
+
 btn = st.button("Start Collecting and Summarizing")
 message_placeholder = st.empty()
+
+# Add placeholders for status display
+status_container = st.container()
+
 if btn:
     message_placeholder.empty()  # Clear previous success or error messages
+    
+    # Create status tracking
+    status_placeholder = status_container.empty()
+    module_status = {
+        'SpaceNews': {'running': False, 'time': 0.0, 'completed': False},
+        'Mideast Roundup': {'running': False, 'time': 0.0, 'completed': False},
+        'Satellite Today': {'running': False, 'time': 0.0, 'completed': False},
+        'AI News': {'running': False, 'time': 0.0, 'completed': False},
+        'Launch News': {'running': False, 'time': 0.0, 'completed': False},
+        'Commercial News': {'running': False, 'time': 0.0, 'completed': False},
+        'Google News': {'running': False, 'time': 0.0, 'completed': False},
+        'Space in Africa': {'running': False, 'time': 0.0, 'completed': False}
+    }
+    
+    def update_status_display():
+        status_text = "## Module Status\n\n"
+        for module, status in module_status.items():
+            if status['completed']:
+                status_text += f"✅ **{module}**: {status['time']:.2f}s\n\n"
+            elif status['running']:
+                status_text += f"🔄 **{module}**: {status['time']:.2f}s\n\n"
+            else:
+                status_text += f"⏳ **{module}**: {status['time']:.2f}s\n\n"
+        status_placeholder.markdown(status_text)
+    
+    # Initial display
+    update_status_display()
+    
+    # Define status callback function
+    def status_callback(module, running=False, completed=False, elapsed_time=0.0):
+        if running:
+            module_status[module]['running'] = True
+            module_status[module]['completed'] = False
+        elif completed:
+            module_status[module]['running'] = False
+            module_status[module]['completed'] = True
+            module_status[module]['time'] = elapsed_time
+        update_status_display()
+    
     with st.spinner('Collecting and summarizing news...'):
         best_news = []
-        news_list = run_news_scraper()
-        # for news in news_list:
-            # 初始化所有可能的字段，避免 KeyError
-            # news.setdefault('title', '')
-            # news.setdefault('link', '')
-            # news.setdefault('date', '')
-            # news.setdefault('tag', '')
-            # news.setdefault('summary', '')
-            # news.setdefault('abstract', '')
-            # news.setdefault('content', '')
-            #news.setdefault('images', [])
-
+        news_list = run_news_scraper(status_callback)
+        
+        # Initialize database connection
+        db = NewsDatabase()
+        if not db.connect():
+            message_placeholder.error("Failed to connect to the database. Please check your configuration.")
+            st.stop()
+        
         regions = ["china", "middle_east", "africa", "central_asia", "southeast_asia", "latin_america", "AI", "launch", "commercial"]
         for region in regions:
             if region not in ["AI", "launch", "commercial"]:
@@ -96,9 +160,9 @@ if btn:
                         tag_list = ['AI', 'Civil', 'Commercial', 'Finance', 'Launch', 'Opinion', 'Manufacturing', 'Imagery and Sensing']
                         example = {'tag': 'AI'}
 
-                        api_key = <YOUR_AzureAI_API_KEY>
-                        azure_endpoint = <YOUR_AzureAI_ENDPOINT>
-                        api_version = "2024-05-01-preview"
+                        api_key = os.environ.get('AZURE_OPENAI_API_KEY')
+                        azure_endpoint = os.environ.get('AZURE_OPENAI_ENDPOINT')
+                        api_version = "2025-04-01-preview"
 
                         # 检查是否正确读取了环境变量
                         if not api_key or not azure_endpoint:
@@ -144,11 +208,29 @@ if btn:
                             tag_response_dict = {"tag": 'Unknown'}
                             print("Warning: Could not parse tag for news title.")
                         selected_news['tag'] = tag_response_dict['tag']
+                    
+                    # Add to best_news for Word document (all articles)
                     best_news.append(selected_news)
 
         events = get_events()
-
-        # 爬取所有best_news的图片，并创建Word文档
+        bot = dingTalkBot(os.environ.get('DINGTALK_BOT_ACCESS_TOKEN'))
+        
+        # Filter articles for DingTalk - only send new ones not in database
+        for article in best_news:
+            if not db.article_exists(article.get("link", "")):
+                db.save_article(article)
+                bot.append_article(article)
+        
+        # Send only new articles to DingTalk
+        bot.send_articles()
+        
+        # Save events to database and filter out duplicates for DingTalk
+        for event in events:
+            if not db.event_exists(event.get('link', '')):
+                db.save_event(event)
+                bot.append_event(event)
+        
+        # 爬取所有best_news的图片，并创建Word文档 (all articles, not just new ones)
         doc = Document()
         for article in best_news:
             doc.add_heading(article.get('region', 'N/A'), level=1)
@@ -156,11 +238,12 @@ if btn:
             doc.add_paragraph(f"Link: {article.get('link', 'N/A')}")
             doc.add_paragraph(f"Date: {article.get('date', 'N/A')}")
             doc.add_paragraph(f"Tag: {article.get('tag', 'N/A')}")
-            doc.add_paragraph(f"Summary: {article.get('summary', 'N/A')}")
+            doc.add_paragraph(f"Abstract: {article.get('abstract', 'N/A')}")
+            doc.add_paragraph(f"Content: {article.get('content', 'N/A')}")
             doc.add_paragraph("\n")  # 每两个新闻条目之间间隔一行
-
+        
         doc.add_heading('Events', level=1)
-
+        # Add all events to Word document (not just unique ones)
         for event in events:
             doc.add_heading(event.get('title', 'N/A'), level=2)
             doc.add_paragraph(f"Link: {event.get('link', 'N/A')}")
@@ -169,10 +252,14 @@ if btn:
             doc.add_paragraph(f"Summary: {event.get('summary', 'N/A')}")
             doc.add_paragraph("\n")  # 每两个events条目之间间隔一行
 
+        #bot.send_events()
         # 保存Word文档到内存缓冲区
         news_word = BytesIO()
         doc.save(news_word)
         news_word.seek(0)
+        
+        # Close database connection
+        db.close()
 
         message_placeholder.success("News summarization completed successfully!")
         st.download_button(
