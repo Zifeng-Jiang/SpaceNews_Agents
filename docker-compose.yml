@@ -1,0 +1,37 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: news-agent-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-news_agent}
+      MYSQL_USER: ${MYSQL_USER:-news_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-news_password}
+    ports:
+      - "1145:3306"  # Changed to use port 3308 on host to avoid conflicts
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+
+  news-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+    ports:
+      - "8502:8502"
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+    command: sh -c "rm -rf /tmp/chrome-user-data && Xvfb :99 -screen 0 1920x1080x24 & echo | streamlit run main.py --server.port 8502 --server.enableCORS false"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
